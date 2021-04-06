@@ -33,7 +33,7 @@ var MIN_LATITUDE = -90.0;
 var MAX_LONGITUDE = 180.0;
 var MIN_LONGITUDE = -180.0;
 
-var ACCEPTABLE_WARNINGS_COUNT = 4;
+var ACCEPTABLE_WARNINGS_COUNT = 2;
 
 var exitCode = 0;
 
@@ -601,6 +601,10 @@ function MetadataValidator(metadata, cityName) {
         request = request.request(url, {
             method: 'HEAD',
             timeout: 10000, // 10 seconds
+            headers: {
+                'User-Agent': REPO_URL,
+                'Accept': '*/*',
+            },
         }, function(response) {
             if (response.statusCode >= 300 && response.statusCode < 400) {
                 asyncWarnings.push(new HttpRedirectStatusIssue(cityName, response.statusCode, response.headers.location));
@@ -609,10 +613,7 @@ function MetadataValidator(metadata, cityName) {
             }
 
             // Cleaning up http request and response
-            // "However, if you add a 'response' event handler, then you
-            //  must consume the data from the response object" NodeJS docs
-            response.on('data', function() {});
-            response.on('end', function() {});
+            response.destroy();
         });
         request.on('error', function(error) {
             if (error == "Error: certificate has expired") {
